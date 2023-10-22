@@ -23,9 +23,8 @@ runCommand([
     'python3 /emsdk/upstream/emscripten/tools/file_packager.py',
     '/src/build/php-web.data',
     '--use-preload-cache --lz4 --preload',
-    '/src/shop-example/public@public',
-    '/src/shop-example/src@src',
-    '/src/vendor@vendor',
+    '/src/shop-example@/app/shop-example',
+    '/src/vendor@/app/vendor',
     '--js-output=/src/build/php-web.data.js',
     '--no-node',
     '--export-name=createPhpModule',
@@ -96,9 +95,9 @@ file_put_contents(
         HTML,
         json_encode(
             <<<'PHP'
-            echo 'Hello world!<pre>' . print_r(glob('/*'), true) . '</pre>';
-            file_put_contents('php://stderr', 'stderr test');
-            file_put_contents('php://stdout', 'stdout test');
+            // TODO fake the request and stuff
+            define('SHOW_EXAMPLE', true);
+            require_once '/app/shop-example/public/index.php';
             PHP,
             JSON_THROW_ON_ERROR
         )
