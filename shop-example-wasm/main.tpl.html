@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Rune Shop Example</title>
+        <script type="text/javascript" src="php-web.data.js"></script>
+        <script type="module">
+            const {PhpWeb} = await import('https://cdn.jsdelivr.net/npm/php-wasm/PhpWeb.mjs');
+            const php = new PhpWeb();
+
+            /*php.binary.then((bin)=>{
+                bin.FS.mkdir("/fs1");
+                bin.FS.mount(bin.PROXYFS, {
+                    root: "/",
+                    fs: appFs.FS
+                }, "/fs1");
+            });*/
+
+            window.php = php;                               // TODO TDB; testing only
+            php.binary.then(bin => window.binary = bin);    // TODO TDB; testing only
+
+            php.addEventListener('error', (ev) => console.error(ev.detail.join('\n')));
+            php.addEventListener('output', (ev) => document.getElementById('output').srcdoc += ev.detail.join('\n'));
+
+            php.addEventListener('ready', () => {
+                document.querySelectorAll('script[type="text/php"]').forEach((node) => {
+                    php.run('<?php ' + node.textContent).catch(error => console.error(error));
+                });
+            });
+        </script>
+        <style>
+            html, body {
+                margin: 0;
+                padding: 0;
+            }
+
+            #output {
+                border: none;
+                margin: 0;
+                padding: 0;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <script type="text/php">
+            echo 'Hello world!<pre>' . print_r(glob('/*'), true) . '</pre>';
+            file_put_contents('php://stderr', 'stderr test');
+            file_put_contents('php://stdout', 'stdout test');
+            return 'wtf';
+        </script>
+        <iframe id="output"></iframe>
+    </body>
+</html>

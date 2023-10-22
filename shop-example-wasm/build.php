@@ -13,6 +13,26 @@ if (!is_dir($buildDir) && !mkdir($buildDir, 0777, true) && !is_dir($buildDir)) {
     throw new RuntimeException(sprintf('Directory "%s" was not created', $buildDir));
 }
 
+passthru(implode(' ', [
+    'docker run --rm',
+    '-v .:/app',
+    'emscripten/emsdk',
+    'python3 /emsdk/upstream/emscripten/tools/file_packager.py',
+    '/app/build/php-web.data',
+    '--use-preload-cache --lz4 --preload',
+    '/app/shop-example/public@public',
+    '/app/shop-example/src@src',
+    '/app/vendor@vendor',
+    '--js-output=/app/build/php-web.data.js --no-node'
+]));
+
+copy(__DIR__.'/main.tpl.html', "$buildDir/index.html");
+
+
+
+die;
+
+
 passthru('composer exec classpreloader -- compile --strict_types=1 --config=shop-example-wasm/cp.config.php --output=build/classes.php');
 
 $prefix = '<?php declare(strict_types=1);';

@@ -20,7 +20,6 @@
     "uuf6429/rune": "dev-main"
   },
   "require-dev": {
-    "classpreloader/console": "^3.2",
     "roave/security-advisories": "dev-latest"
   },
   "scripts": {
