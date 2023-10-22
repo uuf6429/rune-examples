@@ -1,0 +1,37 @@
+{
+  "name": "uuf6429/rune-examples",
+  "description": "Examples and samples for Rune - the PHP Rule Engine.",
+  "type": "project",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "uuf6429\\RuneExamples\\ShopExample\\": "shop-example/src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Christian Sciberras",
+      "email": "christian@sciberras.me"
+    }
+  ],
+  "minimum-stability": "dev",
+  "require": {
+    "php": "^8.1",
+    "uuf6429/rune": "dev-main"
+  },
+  "require-dev": {
+    "classpreloader/console": "^3.2",
+    "roave/security-advisories": "dev-latest"
+  },
+  "scripts": {
+    "shop-example": [
+      "Composer\\Config::disableProcessTimeout",
+      "php -S localhost:80 -t shop-example/public"
+    ],
+    "build-shop-example-wasm": [
+      "Composer\\Config::disableProcessTimeout",
+      "@php shop-example-wasm/build.php"
+    ],
+    "simple-example": "@php simple-example/app.php"
+  }
+}
