@@ -29,7 +29,7 @@
     ],
     "build-shop-example-wasm": [
       "Composer\\Config::disableProcessTimeout",
-      "@php build.php"
+      "@php shop-example-wasm/build.php"
     ],
     "simple-example": "@php simple-example/app.php"
   }

@@ -7,26 +7,26 @@ function runCommand(string|array $cmd): void
     passthru($cmd);
 }
 
-$buildDir = __DIR__ . '/build';
+$buildDir = __DIR__ . '/.build';
 $router = '/app/shop-example/public/index.php';
 if (!is_dir($buildDir) && !mkdir($buildDir, 0777, true) && !is_dir($buildDir)) {
     throw new RuntimeException(sprintf('Directory "%s" was not created', $buildDir));
 }
 
 runCommand('docker create --name=php-wasm-builder soyuka/php-wasm:latest');
-runCommand('docker cp php-wasm-builder:/build/php-web.mjs ./build');
-runCommand('docker cp php-wasm-builder:/build/php-web.wasm ./build');
+runCommand('docker cp php-wasm-builder:/build/php-web.mjs ' . escapeshellarg($buildDir));
+runCommand('docker cp php-wasm-builder:/build/php-web.wasm ' . escapeshellarg($buildDir));
 runCommand('docker rm php-wasm-builder');
 runCommand([
     'docker run',
-    '--volume .:/src',
+    '--volume ' . escapeshellarg(dirname(__DIR__) . ':/project'),
     'soyuka/php-wasm:latest',
     'python3 /emsdk/upstream/emscripten/tools/file_packager.py',
-    '/src/build/php-web.data',
+    '/project/shop-example-wasm/.build/php-web.data',
     '--use-preload-cache --lz4 --preload',
-    '/src/shop-example@/app/shop-example',
-    '/src/vendor@/app/vendor',
-    '--js-output=/src/build/php-web.data.js',
+    '/project/shop-example@/app/shop-example',
+    '/project/vendor@/app/vendor',
+    '--js-output=/project/shop-example-wasm/.build/php-web.data.js',
     '--no-node',
     '--export-name=createPhpModule',
 ]);
@@ -94,12 +94,14 @@ ob_start();
                     REQUEST_URI: '/',
                     CONTENT_TYPE: '',
                 }, serverVar);
+                // FIXME URLSearchParams does not handle files
+                postVar = new URLSearchParams(postVar).toString();
 
                 outputBuffer = '';
                 php.ccall('phpw_run', 'void', ['string'], [
                     // language=injectablephp
                     `
-                    parse_str('${new URLSearchParams(postVar)}', $_POST);
+                    parse_str('${postVar}', $_POST);
                     $_SERVER = array_merge($_SERVER, json_decode('${JSON.stringify(serverVar)}', true));
 
                     $_SERVER['HTTP_HOST'] = "localhost:{$_SERVER['SERVER_PORT']}";
@@ -116,15 +118,25 @@ ob_start();
                 document.getElementById('output').srcdoc = outputBuffer + formHandler;
             };
             window.onSubmitForm = (method, url, encoding, payload) => {
-                if (method === 'GET') {
-                    // TODO overwrite query params in url with data
+                const urlAndHash = url.split('#', 2);
 
+                if (method === 'GET') {
+                    urlAndHash[0] += (urlAndHash[0].includes('?') ? '&' : '?') + new URLSearchParams(payload).toString();
                     payload = {};
+                }
+
+                if (urlAndHash[1] !== undefined) {
+                    /** @var {HTMLIFrameElement} frame */
+                    const frame = document.getElementById('output');
+                    frame.onload = () => {
+                        const elem = frame.contentWindow.document.getElementById(urlAndHash[1]);
+                        elem && elem.scrollIntoView();
+                    };
                 }
 
                 exec({
                     REQUEST_METHOD: method,
-                    REQUEST_URI: url,
+                    REQUEST_URI: urlAndHash[0],
                     CONTENT_TYPE: encoding,
                 }, payload);
             }
@@ -133,7 +145,7 @@ ob_start();
         </script>
         <script id="formHandler">
             document.addEventListener('submit', (event) => {
-                // TODO the code below should not run for external urls
+                // TODO The code below should be skipped for external urls
 
                 event.preventDefault();
 
@@ -155,5 +167,5 @@ ob_start();
 file_put_contents("$buildDir/index.html", ob_get_clean());
 
 echo "‣ Copying static assets ...\n";
-copy(__DIR__ . '/shop-example/public/rune.js', "$buildDir/rune.js");
-copy(__DIR__ . '/shop-example/public/rune.css', "$buildDir/rune.css");
+copy(__DIR__ . '/../shop-example/public/rune.js', "$buildDir/rune.js");
+copy(__DIR__ . '/../shop-example/public/rune.css', "$buildDir/rune.css");
