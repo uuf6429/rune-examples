@@ -2,21 +2,20 @@
 
 namespace uuf6429\RuneExamples\ShopExample;
 
-class View
+use uuf6429\Rune\Rule\RuleInterface;use uuf6429\RuneExamples\ShopExample\Model\Category;use uuf6429\RuneExamples\ShopExample\Model\Product;class View
 {
 public function render(
     string $appRoot,
-    string $cdnRoot,
     array  $tokens,
     array  $categories,
     array  $products,
     array  $rules,
-    string $result,
     string $resultGen,
+    string $resultOut,
     string $resultErr): void
 {
 $asHtml = static fn(string $text) => htmlspecialchars($text, ENT_QUOTES);
-$asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
+$asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | JSON_PRETTY_PRINT);
 ?><!DOCTYPE html>
 <html lang="en">
     <head>
@@ -36,8 +35,8 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/addon/hint/show-hint.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/addon/hint/show-hint.js"></script>
         <!-- Rune CodeMirror Support -->
-        <link rel="stylesheet" href="<?= "$cdnRoot/extra/codemirror/rune.css" ?>">
-        <script src="<?= "$cdnRoot/extra/codemirror/rune.js" ?>"></script>
+        <link rel="stylesheet" href="<?= "./rune.css" ?>">
+        <script src="<?= "./rune.js" ?>"></script>
         <!-- Some custom CSS -->
         <style type="text/css">
             .cm-hint-icon-uuf6429-Rune-example-Model-Product:before {
@@ -54,7 +53,7 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
         <div class="container">
             <h1>Rule Engine Shop Example</h1>
 
-            <form action="<?= $appRoot ?>/#results" method="post">
+            <form action="#results" method="post">
                 &nbsp;
                 <div class="row">
                     <fieldset class="col-md-4">
@@ -102,7 +101,7 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
                 <div class="row">
                     <div class="text-center">
                         <input type="submit" class="btn btn-primary btn-lg" value="Execute"/>
-                        <a class="btn btn-link" href="<?= $appRoot ?>/">Reset Changes</a>
+                        <a class="btn btn-link" href="">Reset Changes</a>
                     </div>
                 </div>
                 &nbsp;
@@ -115,7 +114,7 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
                         PHP_EOL,
                         [
                             '<b>Result:</b>',
-                            $asHtml($result),
+                            $asHtml($resultOut),
                             '<b>Compiled:</b>',
                             $asHtml($resultGen),
                             '<b>Errors:</b>',
@@ -174,7 +173,13 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
                 // category table
                 setupTable(
                     '#categories',
-                    <?= $asJson($categories) ?>,
+                    <?= $asJson(array_map(
+                        static fn(Category $category) => [
+                            $category->name,
+                            $category->parentId,
+                        ],
+                        $categories
+                    )) ?>,
                     function ($tbody, data) {
                         let rowIndex = ++globalRowCount,
                             $tr = $('<tr/>');
@@ -196,7 +201,14 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
                 // products table
                 setupTable(
                     '#products',
-                    <?= $asJson($products) ?>,
+                    <?= $asJson(array_map(
+                        static fn(Product $product) => [
+                            $product->name,
+                            $product->colour,
+                            $product->categoryId,
+                        ],
+                        $products
+                    )) ?>,
                     function ($tbody, data) {
                         let rowIndex = ++globalRowCount,
                             $tr = $('<tr/>');
@@ -219,7 +231,13 @@ $asJson = static fn(mixed $data) => json_encode($data, JSON_THROW_ON_ERROR | JSO
                 // rules table
                 setupTable(
                     '#rules',
-                    <?= $asJson($rules) ?>,
+                    <?= $asJson(array_map(
+                        static fn(RuleInterface $rule) => [
+                            $rule->getName(),
+                            $rule->getCondition(),
+                        ],
+                        $rules
+                    )) ?>,
                     function ($tbody, data) {
                         let rowIndex = ++globalRowCount,
                             $tr = $('<tr/>'),
