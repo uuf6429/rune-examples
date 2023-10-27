@@ -5,7 +5,6 @@ namespace uuf6429\RuneExamples\ShopExample;
 use uuf6429\Rune\Rule\RuleInterface;use uuf6429\RuneExamples\ShopExample\Model\Category;use uuf6429\RuneExamples\ShopExample\Model\Product;class View
 {
 public function render(
-    string $appRoot,
     array  $tokens,
     array  $categories,
     array  $products,
@@ -21,24 +20,109 @@ $asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | J
     <head>
         <title>Rule Engine Example</title>
         <!-- jQuery -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-        <!-- Twitter Bootstrap -->
-        <link rel="stylesheet"
-              href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/css/bootstrap.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.6/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"
+                integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g=="
+                crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!-- Bootstrap -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet"
+              integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN"
+              crossorigin="anonymous">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"
+                integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL"
+                crossorigin="anonymous"></script>
         <!-- CodeMirror -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/codemirror.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/codemirror.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.css"
+              integrity="sha512-uf06llspW44/LZpHzHT6qBOIVODjWtv4MxCricRxkzvopAlSWnTf6hpZTFxuuZcuNE9CBQhqE0Seu1CoRk84nQ=="
+              crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/codemirror.min.js"
+                integrity="sha512-2359y3bpxFfJ9xZw1r2IHM0WlZjZLI8gjLuhTGOVtRPzro3dOFy4AyEEl9ECwVbQ/riLXMeCNy0h6HMt2WUtYw=="
+                crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <!-- CodeMirror Simple Mode -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/addon/mode/simple.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/mode/simple.min.js"
+                integrity="sha512-CGM6DWPHs250F/m90YZ9NEiEUhd9a4+u8wAzeKC6uHzZbYyt9/e2dLC5BGGB6Y0HtEdZQdSDYjDsoTyNGdMrMA=="
+                crossorigin="anonymous" referrerpolicy="no-referrer"></script>
         <!-- CodeMirror Hints -->
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/addon/hint/show-hint.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.13.2/addon/hint/show-hint.js"></script>
+        <link rel="stylesheet"
+              href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.css"
+              integrity="sha512-W/cvA9Wiaq79wGy/VOkgMpOILyqxqIMU+rkneDUW2uqiUT53I6DKmrF4lmCbRG+/YrW0J69ecvanKCCyb+sIWA=="
+              crossorigin="anonymous" referrerpolicy="no-referrer"/>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.15/addon/hint/show-hint.min.js"
+                integrity="sha512-4+hfJ/4qrBFEm8Wdz+mXpoTr/weIrB6XjJZAcc4pE2Yg5B06aKS/YLMN5iIAMXFTe0f1eneuLE5sRmnSHQqFNg=="
+                crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <!-- Load style according to color scheme -->
+        <script>
+            document.documentElement.setAttribute(
+                'data-bs-theme',
+                window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+            );
+        </script>
         <!-- Rune CodeMirror Support -->
         <link rel="stylesheet" href="<?= "./rune.css" ?>">
         <script src="<?= "./rune.js" ?>"></script>
         <!-- Some custom CSS -->
-        <style type="text/css">
+        <style>
+            :root {
+                color-scheme: light;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    color-scheme: dark;
+                }
+
+                .CodeMirror.cm-s-explang,
+                .CodeMirror.cm-s-explang .cm-operator {
+                    color: #A9B7C6;
+                }
+
+                .CodeMirror.cm-s-explang .CodeMirror-cursor {
+                    border-left-color: #FFF;
+                }
+
+                .CodeMirror.cm-s-explang .CodeMirror-selected {
+                    background: #214283;
+                }
+
+                .CodeMirror.cm-s-explang .cm-string {
+                    color: #6A8759;
+                }
+
+                .CodeMirror.cm-s-explang .cm-number {
+                    color: #6897BB;
+                }
+
+                .CodeMirror.cm-s-explang .cm-property {
+                    color: #FFC66D;
+                }
+
+                .CodeMirror.cm-s-explang .cm-atom {
+                    color: #CC7832;
+                }
+
+                .CodeMirror-hints.explang[role="listbox"] {
+                    background: #212529;
+                    border-color: #FFFFFF26;
+                }
+
+                .CodeMirror-hints.explang[role="listbox"] li {
+                    color: #DEE2E6;
+                }
+
+                .CodeMirror-hints.cm-hint-hint {
+                    color: #DEE2E6;
+                    background: #212529;
+                    border-color: #FFFFFF26;
+                }
+
+                .CodeMirror-hints.cm-hint-hint .cm-signature .name {
+                    color: #DEE2E6;
+                }
+            }
+
+            .CodeMirror.cm-s-explang {
+                background: transparent;
+            }
+
             .cm-hint-icon-uuf6429-Rune-example-Model-Product:before {
                 content: "\1F455";
                 font-size: 8px;
@@ -61,9 +145,9 @@ $asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | J
                         <table class="table table-hover table-condensed" id="categories">
                             <thead>
                                 <tr>
-                                    <th width="32px">ID</th>
+                                    <th style="width: 32px">ID</th>
                                     <th>Name</th>
-                                    <th width="80px">Parent</th>
+                                    <th style="width: 80px">Parent</th>
                                 </tr>
                             </thead>
                         </table>
@@ -76,7 +160,7 @@ $asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | J
                                 <tr>
                                     <th>Name</th>
                                     <th>Colour</th>
-                                    <th width="80px">Category</th>
+                                    <th style="width: 80px">Category</th>
                                 </tr>
                             </thead>
                         </table>
@@ -89,8 +173,8 @@ $asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | J
                         <table class="table table-hover table-condensed" id="rules">
                             <thead>
                                 <tr>
-                                    <th width="32px">ID</th>
-                                    <th width="30%">Name</th>
+                                    <th style="width: 32px">ID</th>
+                                    <th style="width: 30%">Name</th>
                                     <th>Condition</th>
                                 </tr>
                             </thead>
@@ -126,39 +210,39 @@ $asJson = static fn(array $items) => json_encode($items, JSON_THROW_ON_ERROR | J
         </div>
 
         <script>
-            $(document).ready(function () {
+            $(function () {
                 let globalRowCount = 0,
                     // default rune editor settings
                     runeEditorOptions = {
                         tokens: <?= $asJson($tokens) ?>
                     },
-                    // a simple data table populator
+                    // a simple data table filler
                     setupTable = function (table, data, rowGenerator) {
-                        var $table = $(table),
-                            $tbody = $table.find('tbody:last'),
-                            updateEmptyRows = function () {
-                                $tbody
-                                    .find('tr')
-                                    .filter(function () {
-                                        let empty = true;
-                                        $(this).find('input, textarea, select').each(function () {
-                                            if ($(this).val()) {
-                                                empty = false;
-                                                return false;
-                                            }
-                                        });
-                                        return empty;
-                                    })
-                                    .remove();
-                                addRow();
-                            },
-                            addRow = function (rowData) {
-                                let $tr = rowGenerator($tbody, rowData || {});
-                                $tr.find('input, textarea, select').on('change, blur', updateEmptyRows);
-                                $tbody.find('.row-num-autogen').each(function (num, el) {
-                                    el.innerHTML = (num + 1).toString();
-                                });
-                            };
+                        const $table = $(table);
+                        let $tbody = $table.find('tbody:last');
+                        const updateEmptyRows = function () {
+                            $tbody
+                                .find('tr')
+                                .filter(function () {
+                                    let empty = true;
+                                    $(this).find('input, textarea, select').each(function () {
+                                        if ($(this).val()) {
+                                            empty = false;
+                                            return false;
+                                        }
+                                    });
+                                    return empty;
+                                })
+                                .remove();
+                            addRow();
+                        };
+                        const addRow = function (rowData) {
+                            let $tr = rowGenerator($tbody, rowData || {});
+                            $tr.find('input, textarea, select').on('change, blur', updateEmptyRows);
+                            $tbody.find('.row-num-autogen').each(function (num, el) {
+                                el.innerHTML = (num + 1).toString();
+                            });
+                        };
                         if (!$tbody.length) {
                             $tbody = $('<tbody/>');
                             $table.append($tbody);

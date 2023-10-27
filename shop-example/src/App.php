@@ -27,7 +27,6 @@ class App
         ['rules' => $rules, 'categories' => $categories, 'products' => $products] = $this->getData($_POST);
         ['descriptor' => $descriptor, 'result' => $result, 'resultOut' => $resultOut, 'resultErr' => $resultErr] = $this->execute($rules, $products);
         (new View)->render(
-            '',
             $this->getTokens($descriptor),
             $categories,
             $products,
