@@ -9,6 +9,8 @@ use uuf6429\Rune\Engine;
 use uuf6429\Rune\Engine\ExceptionHandler\CollectExceptions;
 use uuf6429\Rune\Rule\GenericRule;
 use uuf6429\Rune\Rule\RuleInterface;
+use uuf6429\Rune\TypeInfo\TypeInfoMethod;
+use uuf6429\Rune\TypeInfo\TypeInfoParameter;
 use uuf6429\Rune\Util\SymfonyEvaluator;
 use uuf6429\RuneExamples\ShopExample\Action\PrintAction;
 use uuf6429\RuneExamples\ShopExample\Context\ProductContext;
@@ -146,7 +148,11 @@ class App
     #[ArrayShape(['constants' => 'array', 'operators' => 'array', 'variables' => 'array', 'functions' => 'array', 'typeinfo' => 'array'])]
     private function getTokens(ContextDescriptorInterface $descriptor): array
     {
-        $arrayify = static fn($items) => array_map(static fn($item) => $item->toArray(), $items);
+        $serializer = fn($item, $default) => match (true) {
+            $item instanceof TypeInfoMethod => [...$default, 'hint' => $this->renderMethodHint($item)],
+            default => $default
+        };
+        $arrayify = static fn($items) => array_map(static fn($item) => $item->toArray($serializer), $items);
 
         return [
             'constants' => [
@@ -177,5 +183,39 @@ class App
             'functions' => $arrayify(array_values($descriptor->getFunctionTypeInfo())),
             'typeinfo' => $arrayify($descriptor->getDetailedTypeInfo()),
         ];
+    }
+
+    private function renderMethodHint(TypeInfoMethod $method): string
+    {
+        return sprintf(
+            <<<'HTML'
+                <div class="cm-signature">
+                    <span class="name">%s</span>(<span class="args">%s</span>): <span class="type">%s</span>
+                </div>%s
+                HTML,
+            $method->getName(),
+            implode(
+                ', ',
+                array_map(
+                    static function (TypeInfoParameter $param) {
+                        return sprintf(
+                            <<<'HTML'
+                                <span class="%s" title="%s"><span class="type">%s</span>$%s</span>%s</span>
+                                HTML,
+                            $param->hasHint() ? 'arg hint' : 'arg',
+                            $param->getHint(),
+                            implode('|', $param->getTypes()) . ' ',
+                            $param->getName(),
+                            $param->hasLink()
+                                ? "<a href=\"{$param->getLink()}\" target='_blank'>🔗</a>"
+                                : '',
+                        );
+                    },
+                    $method->getParameters()
+                )
+            ),
+            implode('|', $method->getReturnTypes()),
+            $method->getHint()
+        );
     }
 }
