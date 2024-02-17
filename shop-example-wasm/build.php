@@ -52,9 +52,51 @@ ob_start();
     <head>
         <title>Rune Shop Example</title>
         <style>
+            :root {
+                color-scheme: light;
+                color: #222;
+                background-color: #FFF;
+            }
+
+            @media (prefers-color-scheme: dark) {
+                :root {
+                    color-scheme: dark;
+                    color: #FFF;
+                    background-color: #222;
+                }
+            }
+
             html, body {
                 margin: 0;
                 padding: 0;
+                font: 1.2em Helvetica;
+                letter-spacing: 0.06em;
+            }
+
+            #loader {
+                height: 100%;
+                width: 100%;
+                display: flex;
+                position: fixed;
+                align-items: center;
+                justify-content: center;
+                opacity: 90%;
+            }
+
+            #loader::before {
+                content: " ";
+                width: 1em;
+                height: 1em;
+                border-radius: 50%;
+                border: 4px dotted currentColor;
+                margin-right: .5em;
+                animation: loader 2s cubic-bezier(0.8, 0.6, 0.8, 0.6) infinite;
+            }
+
+            @keyframes loader {
+                to {
+                    transform: rotate(360deg);
+                }
             }
 
             #output {
@@ -68,12 +110,38 @@ ob_start();
                 bottom: 0;
                 width: 100%;
                 height: 100%;
+                display: none;
             }
         </style>
         <script type="module">
+            const loader = document.getElementById('loader');
+            const output = document.getElementById('output');
+
+            async function* streamToAsyncIterable(stream) {
+                const reader = stream.getReader()
+                try {
+                    while (true) {
+                        const {done, value} = await reader.read()
+                        if (done) return
+                        yield value
+                    }
+                } finally {
+                    reader.releaseLock()
+                }
+            }
+
+            const response = await fetch('./php-web.wasm')
+            let responseSize = 0
+            const responseLength = response.headers.get('Content-Length') * 1;
+            for await (const chunk of streamToAsyncIterable(response.body)) {
+                responseSize += chunk.length;
+                loader.textContent = 'Preloading PHP (' + (responseSize / responseLength * 100).toFixed(1) + '%)...';
+            }
+
             const binary = (await import('./php-web.mjs')).default;
             const router = '<?= $router ?>';
             let outputBuffer = '';
+            loader.textContent = 'Loading PHP...';
             const php = await binary({
                 onAbort(reason) {
                     console.error('WASM aborted: ' + reason);
@@ -119,7 +187,7 @@ ob_start();
                 ]);
 
                 const formHandler = document.getElementById('formHandler').outerHTML;
-                document.getElementById('output').srcdoc = outputBuffer + formHandler;
+                output.srcdoc = outputBuffer + formHandler;
             };
             window.onSubmitForm = (method, url, encoding, payload) => {
                 const urlAndHash = url.split('#', 2);
@@ -145,7 +213,10 @@ ob_start();
                 }, payload);
             }
 
+            loader.textContent = 'Starting server...';
             exec();
+            loader.style.display = 'none';
+            output.style.display = 'block';
         </script>
         <script id="formHandler">
             document.addEventListener('submit', (event) => {
@@ -165,6 +236,7 @@ ob_start();
         </script>
     </head>
     <body>
+        <div id="loader">Initializing...</div>
         <iframe id="output"></iframe>
     </body>
 </html><?php
