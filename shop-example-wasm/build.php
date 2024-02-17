@@ -4,23 +4,27 @@ function runCommand(string|array $cmd): void
 {
     is_array($cmd) && ($cmd = implode(' ', $cmd));
     echo "‣ Running $cmd ...\n";
-    passthru($cmd);
+    if (passthru($cmd, $code) === false || $code) {
+        throw new RuntimeException("Command exited with error code $code");
+    }
 }
 
 $buildDir = __DIR__ . '/.build';
 $router = '/app/shop-example/public/index.php';
 if (!is_dir($buildDir) && !mkdir($buildDir, 0777, true) && !is_dir($buildDir)) {
-    throw new RuntimeException(sprintf('Directory "%s" was not created', $buildDir));
+    throw new RuntimeException("Directory was not created: $buildDir");
 }
 
-runCommand('docker create --name=php-wasm-builder soyuka/php-wasm:latest');
+$dockerImage = 'soyuka/php-wasm:8.2.9';
+runCommand('docker rm --force php-wasm-builder');
+runCommand("docker create --name=php-wasm-builder $dockerImage");
 runCommand('docker cp php-wasm-builder:/build/php-web.mjs ' . escapeshellarg($buildDir));
 runCommand('docker cp php-wasm-builder:/build/php-web.wasm ' . escapeshellarg($buildDir));
 runCommand('docker rm php-wasm-builder');
 runCommand([
     'docker run',
     '--volume ' . escapeshellarg(dirname(__DIR__) . ':/project'),
-    'soyuka/php-wasm:latest',
+    $dockerImage,
     'python3 /emsdk/upstream/emscripten/tools/file_packager.py',
     '/project/shop-example-wasm/.build/php-web.data',
     '--use-preload-cache --lz4 --preload',
