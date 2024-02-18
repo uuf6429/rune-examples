@@ -146,6 +146,7 @@ ob_start();
                 loader.textContent = 'Preloading PHP (' + (e.loaded / e.total * 100).toFixed(1) + '%)...';
             });
 
+            loader.textContent = 'Loading PHP VM...';
             const binary = (await import('./php-web.mjs')).default;
             const router = '<?= $router ?>';
             let outputBuffer = '';
@@ -253,3 +254,5 @@ file_put_contents("$buildDir/index.html", ob_get_clean());
 echo "‣ Copying static assets ...\n";
 copy(__DIR__ . '/../shop-example/public/rune.js', "$buildDir/rune.js");
 copy(__DIR__ . '/../shop-example/public/rune.css', "$buildDir/rune.css");
+copy(__DIR__ . '/screenshot-dark.png', "$buildDir/screenshot-dark.png");
+copy(__DIR__ . '/screenshot-light.png', "$buildDir/screenshot-light.png");
