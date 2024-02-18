@@ -44,5 +44,6 @@ jobs:
           name: shop-example-wasm-build
           path: rune-examples/shop
       - run: |
-          git status
-      #   git add . && git commit -m "????" && git push origin main
+          git add .
+          git commit -m "${{ github.event.workflow_run.head_commit.message }}"
+          git push origin main
