@@ -143,7 +143,14 @@ ob_start();
             }
 
             const binaryData = await get('./php-web.wasm', function (e) {
-                loader.textContent = 'Preloading PHP (' + (e.loaded / e.total * 100).toFixed(1) + '%)...';
+                const total = e.total || <?=
+                    // Most browsers are incapable of providing un-decoded e.loaded, in such case e.total would be
+                    // false-y. Luckily, we can get the matching original size from PHP.
+                    filesize("$buildDir/php-web.wasm")
+                    ?>;
+                const percent = e.loaded / total * 100;
+                const progress = Number.isFinite(percent) ? ' (' + percent.toFixed(1) + '%)' : '';
+                loader.textContent = 'Preloading PHP' + progress + '...';
             });
 
             loader.textContent = 'Loading PHP VM...';
