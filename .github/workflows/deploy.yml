@@ -11,6 +11,13 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+      - id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+      - uses: actions/cache@v3
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
       - run: composer install --ansi --no-progress --prefer-dist --no-interaction
       - run: php shop-example-wasm/build.php
       - uses: actions/upload-artifact@v4
@@ -24,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: git@github.com:uuf6429/uuf6429.github.io.git
+          repository: uuf6429/uuf6429.github.io
           ref: main
           token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
       - uses: actions/download-artifact@v4
