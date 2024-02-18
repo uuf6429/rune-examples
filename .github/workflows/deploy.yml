@@ -13,7 +13,7 @@ jobs:
           php-version: '8.2'
       - id: composer-cache
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
-      - uses: actions/cache@v3
+      - uses: actions/cache@v4
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
@@ -34,12 +34,15 @@ jobs:
           repository: uuf6429/uuf6429.github.io
           ref: main
           token: ${{ secrets.ACTIONS_GITHUB_TOKEN }}
-      - uses: actions/download-artifact@v4
-        with:
-          name: shop-example-wasm-build
       - run: |
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
           ls -lah
           rm -rf rune-examples/shop
-      #- run: git push origin master
+      - uses: actions/download-artifact@v4
+        with:
+          name: shop-example-wasm-build
+          path: rune-examples/shop
+      - run: |
+          git status
+      #   git add . && git commit -m "????" && git push origin main
