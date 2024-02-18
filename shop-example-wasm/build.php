@@ -117,31 +117,39 @@ ob_start();
             const loader = document.getElementById('loader');
             const output = document.getElementById('output');
 
-            async function* streamToAsyncIterable(stream) {
-                const reader = stream.getReader()
-                try {
-                    while (true) {
-                        const {done, value} = await reader.read()
-                        if (done) return
-                        yield value
-                    }
-                } finally {
-                    reader.releaseLock()
-                }
+            function get(url, onProgress) {
+                return new Promise(function (resolve, reject) {
+                    let xhr = new XMLHttpRequest();
+                    xhr.open('get', url);
+                    xhr.onprogress = onProgress;
+                    xhr.onload = function () {
+                        if (xhr.status >= 200 && this.status < 300) {
+                            resolve(xhr.response);
+                        } else {
+                            reject({
+                                status: this.status,
+                                statusText: xhr.statusText
+                            });
+                        }
+                    };
+                    xhr.onerror = function () {
+                        reject({
+                            status: this.status,
+                            statusText: xhr.statusText
+                        });
+                    };
+                    xhr.send();
+                });
             }
 
-            const response = await fetch('./php-web.wasm')
-            let responseSize = 0
-            const responseLength = response.headers.get('Content-Length') * 1;
-            for await (const chunk of streamToAsyncIterable(response.body)) {
-                responseSize += chunk.length;
-                loader.textContent = 'Preloading PHP (' + (responseSize / responseLength * 100).toFixed(1) + '%)...';
-            }
+            const binaryData = await get('./php-web.wasm', function (e) {
+                loader.textContent = 'Preloading PHP (' + (e.loaded / e.total * 100).toFixed(1) + '%)...';
+            });
 
             const binary = (await import('./php-web.mjs')).default;
             const router = '<?= $router ?>';
             let outputBuffer = '';
-            loader.textContent = 'Loading PHP...';
+            loader.textContent = 'Initializing PHP VM...';
             const php = await binary({
                 onAbort(reason) {
                     console.error('WASM aborted: ' + reason);
